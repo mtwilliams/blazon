@@ -11,7 +11,6 @@ defmodule Blazon.Tests do
     string: "foo",
     charlist: 'foo',
     list: [1, 2, 3],
-    tuple: {1, 2, 3},
     map: %{foo: :bar}
   }
 
@@ -27,7 +26,6 @@ defmodule Blazon.Tests do
     field :string
     field :charlist
     field :list
-    field :tuple
     field :map
   end
 
@@ -70,5 +68,10 @@ defmodule Blazon.Tests do
 
   test "embedding" do
     assert EmbeddedSerializer.serialize(Blazon.Serializers.Map, %{basics: @basics}) == %{basics: @basics}
+  end
+
+  test "json" do
+    encoded = BasicsSerializer.serialize(Blazon.Serializers.JSON, @basics)
+    assert encoded == Poison.encode!(@basics)
   end
 end
