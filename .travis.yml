@@ -9,7 +9,6 @@ script:
 after_script:
   - MIX_ENV=test mix coveralls.travis
   - mix deps.get --only docs
-  - MIX_ENV=docs mix hex.docs
   - MIX_ENV=docs mix inch.report
 notifications:
   email:
