@@ -1,0 +1,28 @@
+#
+# Sublime Text 2/3
+#
+
+*.sublime-*
+
+#
+# Erlang & Elixir
+#
+
+# Ignore dependencies.
+_deps/
+
+# Ignore build artifacts and releases.
+_build/
+_rel/
+
+# Ignore coverage.
+cover/
+
+# Ignore documentation.
+docs/
+
+# Ignore crash dumps.
+erl_crash.dump
+
+# For everything else, there's MasterCard.
+*.ez
