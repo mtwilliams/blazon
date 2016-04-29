@@ -77,36 +77,48 @@ defmodule Blazon.Serializable do
 
   defmacro embed(name, representer_or_type, opts \\ []) do
     case representer_or_type do
-      [{:__aliases__, _, [representer_or_type]}] ->
-        # TODO(mtwilliams): Embed collections.
-        # REFACTOR(mtwilliams): Extract the singular case out so it can be
-        # reused on a collection.
-        raise "Not implemented yet!"
-
-      {:__aliases__, _, [representer_or_type]} ->
+      [aliased] ->
+        representer_or_type = Macro.expand(aliased, __CALLER__)
+        expand = expander(representer_or_type, opts)
         quote do
           @__serialize__ unquote(name)
-
-          if Blazon.Serializable.is?(unquote(representer_or_type)) do
-            def __field__(unquote(name), model) do
-              unquote(representer_or_type).serialize(Blazon.Serializers.Map, serialize, Map.get(model, unquote(name)), unquote(opts))
-            end
-          else
-            def __field__(unquote(name), model) do
-              # SMELL(mtwilliams): This is pretty much the same as the code in
-              # our __before_compile__ hook.
-              model = Map.get(model, unquote(name))
-              case unquote({Keyword.get(opts, :only), Keyword.get(opts, :except)}) do
-                {nil, nil} ->
-                  model
-                {nil, leave} ->
-                  Enum.reject(model, fn {field, _} -> field in leave end)
-                {keep, nil} ->
-                  Enum.filter(model, fn {field, _} -> field in keep end)
-              end
-            end
+          def __field__(unquote(name), model) do
+            Enum.map(Map.get(model, unquote(name)), unquote(expand))
           end
         end
+
+      aliased ->
+        representer_or_type = Macro.expand(aliased, __CALLER__)
+        expand = expander(representer_or_type, opts)
+        quote do
+          @__serialize__ unquote(name)
+          def __field__(unquote(name), model) do
+            unquote(expand).(Map.get(model, unquote(name)))
+          end
+        end
+    end
+  end
+
+  defp expander(representer_or_type, opts) do
+    quote do
+      if Blazon.Serializable.is?(unquote(representer_or_type)) do
+        fn model ->
+          unquote(representer_or_type).serialize(Blazon.Serializers.Map, model, unquote(opts))
+        end
+      else
+        fn model ->
+          # SMELL(mtwilliams): This is pretty much the same as the code in
+          # our __before_compile__ hook.
+          case unquote({Keyword.get(opts, :only), Keyword.get(opts, :except)}) do
+            {nil, nil} ->
+              model
+            {nil, leave} ->
+              Enum.reject(model, fn {field, _} -> field in leave end)
+            {keep, nil} ->
+              Enum.filter(model, fn {field, _} -> field in keep end)
+          end
+        end
+      end
     end
   end
 end
