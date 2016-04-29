@@ -7,7 +7,7 @@ if Code.ensure_loaded?(Poison) do
 
     def serialize(agnostic, opts) do
       Enum.into(agnostic, %{})
-      |> Poison.encode!
+      |> Poison.encode!(Keyword.take(opts, ~w(pretty)a))
     end
   end
 end
