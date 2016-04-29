@@ -20,6 +20,10 @@ defmodule Blazon.Serializable do
       # implementations.
       @before_compile Blazon.Serializable
       Module.register_attribute __MODULE__, :__serialize__, accumulate: true, persist: false
+
+      # Allow users to massage their model prior to serialization.
+      defp __before_serialize__(model), do: model
+      defoverridable [__before_serialize__: 1]
     end
   end
 
@@ -27,6 +31,8 @@ defmodule Blazon.Serializable do
   defmacro __before_compile__(_opts) do
     quote do
       def serialize(serializer, model, opts \\ []) do
+        model = __before_serialize__(model)
+
         filtered = case {Keyword.get(opts, :only), Keyword.get(opts, :except)} do
           {nil, nil} ->
             @__serialize__
@@ -48,6 +54,12 @@ defmodule Blazon.Serializable do
       function_exported?(module, :__blazon__, 0)
     else
       false
+    end
+  end
+
+  defmacro before(do: hook) do
+    quote do
+      defp __before_serialize__(var!(model)), [do: unquote(hook)]
     end
   end
 
