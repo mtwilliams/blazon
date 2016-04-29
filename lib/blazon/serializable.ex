@@ -2,6 +2,8 @@ defmodule Blazon.Serializable do
   @moduledoc ~S"""
   """
 
+  @options ~w(only except via)a
+
   @doc false
   defmacro __using__(_opts) do
     quote do
@@ -50,12 +52,21 @@ defmodule Blazon.Serializable do
   end
 
   defmacro field(name, opts \\ []) do
-    quote do
-      @__serialize__ unquote(name)
-
-      def __field__(unquote(name), model) do
-        Map.get(model, unquote(name))
-      end
+    case Keyword.get(opts, :via) do
+      {:fn, _, _} = generator ->
+        quote do
+          @__serialize__ unquote(name)
+          def __field__(unquote(name), model) do
+            unquote(generator).(model)
+          end
+        end
+      _ ->
+        quote do
+          @__serialize__ unquote(name)
+          def __field__(unquote(name), model) do
+            Map.get(model, unquote(name))
+          end
+        end
     end
   end
 
