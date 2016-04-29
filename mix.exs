@@ -32,12 +32,7 @@ defmodule Blazon.Mixfile do
   defp documentation_url, do: "https://github.com/mtwilliams/blazon"
 
   defp version do
-    case System.cmd("git", ["describe", "--tags"], stderr_to_stdout: true) do
-      {tag, 0} ->
-        String.strip(tag)
-      _ ->
-        "0.0.0"
-    end
+    "0.1.3"
   end
 
   defp elixirc_paths(:test), do: ~w(test/support) ++ elixirc_paths
