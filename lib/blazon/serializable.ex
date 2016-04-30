@@ -39,27 +39,28 @@ defmodule Blazon.Serializable do
       # We ensure __field__ is defined at least once so `extract` (in
       # `serialize/3` below) compiles even if a user doesn't declare a single
       # field, link, or embed to serialize.
-      defp __field__(nil, _), do: nil
+      defp __field__(:__blazon__, _), do: true
 
       def serialize(serializer, model, opts \\ []) do
-        fields = case {Keyword.get(opts, :only), Keyword.get(opts, :except)} do
-          {nil, nil} ->
-            @__serialize__
-          {nil, leave} ->
-            Enum.reject(@__serialize__, fn field -> field in leave end)
-          {keep, nil} ->
-            Enum.filter(@__serialize__, fn field -> field in keep end)
-        end
-
-        extract = fn model ->
-          Enum.map(fields, fn field -> {field, __field__(field, model)} end)
-        end
+        fields = to_be_serialized(opts)
+        extract = fn model -> Enum.map(fields, &({&1, __field__(&1, model)})) end
 
         model
         |> __before_serialize__
         |> extract.()
         |> serializer.serialize(opts)
         |> __after_serialize__
+      end
+
+      defp to_be_serialized(opts) do
+        case {Keyword.get(opts, :only), Keyword.get(opts, :except)} do
+          {nil, nil} ->
+            @__serialize__
+          {nil, leave} ->
+            Enum.reject(@__serialize__, &(&1 in leave))
+          {keep, nil} ->
+            Enum.filter(@__serialize__, &(&1 in keep))
+        end
       end
     end
   end
@@ -110,27 +111,27 @@ defmodule Blazon.Serializable do
     case representer_or_type do
       [aliased] ->
         representer_or_type = Macro.expand(aliased, __CALLER__)
-        expand = expander(representer_or_type, opts)
+        embed = do_embed(representer_or_type, opts)
         quote do
           @__serialize__ unquote(name)
           defp __field__(unquote(name), model) do
-            Enum.map(Map.get(model, unquote(name)), unquote(expand))
+            Enum.map(Map.get(model, unquote(name)), unquote(embed))
           end
         end
 
       aliased ->
         representer_or_type = Macro.expand(aliased, __CALLER__)
-        expand = expander(representer_or_type, opts)
+        embed = do_embed(representer_or_type, opts)
         quote do
           @__serialize__ unquote(name)
           defp __field__(unquote(name), model) do
-            unquote(expand).(Map.get(model, unquote(name)))
+            unquote(embed).(Map.get(model, unquote(name)))
           end
         end
     end
   end
 
-  defp expander(representer_or_type, opts) do
+  defp do_embed(representer_or_type, opts) do
     quote do
       if Blazon.Serializable.is?(unquote(representer_or_type)) do
         fn model ->
