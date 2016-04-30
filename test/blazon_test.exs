@@ -60,10 +60,11 @@ defmodule Blazon.Tests do
   defmodule EmbeddedSerializer do
     use Blazon.Serializable
     embed :basics, BasicsSerializer
+    embed :collection, [BasicsSerializer]
   end
 
   test "embedding" do
-    assert Blazon.to_map(EmbeddedSerializer, %{basics: @basics}) == %{basics: @basics}
+    assert Blazon.to_map(EmbeddedSerializer, %{basics: @basics, collection: [@basics]}) == %{basics: @basics, collection: [@basics]}
   end
 
   test "json" do
