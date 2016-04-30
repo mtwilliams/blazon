@@ -85,20 +85,22 @@ defmodule Blazon.Serializable do
 
   defmacro field(name, opts \\ []) do
     case Keyword.get(opts, :via) do
+      {:&, _, _} = generator ->
+        serialize_via_generator(name, generator)
       {:fn, _, _} = generator ->
-        quote do
-          @__serialize__ unquote(name)
-          defp __field__(unquote(name), model) do
-            unquote(generator).(model)
-          end
-        end
+        serialize_via_generator(name, generator)
       _ ->
         quote do
           @__serialize__ unquote(name)
-          defp __field__(unquote(name), model) do
-            Map.get(model, unquote(name))
-          end
+          defp __field__(unquote(name), model), do: Map.get(model, unquote(name))
         end
+    end
+  end
+
+  defp serialize_via_generator(name, generator) do
+    quote do
+      @__serialize__ unquote(name)
+      defp __field__(unquote(name), model), do: unquote(generator).(model)
     end
   end
 
