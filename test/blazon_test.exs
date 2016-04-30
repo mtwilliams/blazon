@@ -30,7 +30,7 @@ defmodule Blazon.Tests do
   end
 
   test "serialization of basic types" do
-    assert BasicsSerializer.serialize(Blazon.Serializers.Map, @basics) == @basics
+    assert Blazon.to_map(BasicsSerializer, @basics) == @basics
   end
 
   defmodule DouglasAdamsSerializer do
@@ -41,23 +41,19 @@ defmodule Blazon.Tests do
   @the_answer_to_the_ultimate_question %{meaning_of_life: 42}
 
   test "only" do
-    assert DouglasAdamsSerializer.serialize(Blazon.Serializers.Map, @the_answer_to_the_ultimate_question, only: []) == %{}
-
-    serialized = DouglasAdamsSerializer.serialize(Blazon.Serializers.Map, @the_answer_to_the_ultimate_question, only: ~w(meaning_of_life)a)
-    assert serialized == @the_answer_to_the_ultimate_question
+   assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, only: []) == %{}
+   assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, only: ~w(meaning_of_life)a) == @the_answer_to_the_ultimate_question
   end
 
   test "except" do
-    assert DouglasAdamsSerializer.serialize(Blazon.Serializers.Map, @the_answer_to_the_ultimate_question, except: ~w(meaning_of_life)a) == %{}
-
-    serialized = DouglasAdamsSerializer.serialize(Blazon.Serializers.Map, @the_answer_to_the_ultimate_question, except: [])
-    assert serialized == @the_answer_to_the_ultimate_question
+    assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, except: ~w(meaning_of_life)a) == %{}
+    assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, except: []) == @the_answer_to_the_ultimate_question
   end
 
   test "only and except are mutually exclusive" do
     # TODO(mtwilliams): Provide a custom exception type.
     assert_raise CaseClauseError, fn ->
-      DouglasAdamsSerializer.serialize(Blazon.Serializers.Map, %{}, only: ~w(meaning_of_life)a, except: ~w(meaning_of_life)a)
+      Blazon.to_map(DouglasAdamsSerializer, %{}, only: ~w(meaning_of_life)a, except: ~w(meaning_of_life)a)
     end
   end
 
@@ -67,12 +63,11 @@ defmodule Blazon.Tests do
   end
 
   test "embedding" do
-    assert EmbeddedSerializer.serialize(Blazon.Serializers.Map, %{basics: @basics}) == %{basics: @basics}
+    assert Blazon.to_map(EmbeddedSerializer, %{basics: @basics}) == %{basics: @basics}
   end
 
   test "json" do
-    encoded = BasicsSerializer.serialize(Blazon.Serializers.JSON, @basics)
-    assert encoded == Poison.encode!(@basics)
+    assert Blazon.to_json(BasicsSerializer, @basics) == Poison.encode!(@basics)
   end
 
   defmodule HooksSerializer do
@@ -91,6 +86,6 @@ defmodule Blazon.Tests do
   end
 
   test "hooks" do
-    assert HooksSerializer.serialize(Blazon.Serializers.Map, %{}) == %{before: true, after: true}
+    assert Blazon.to_map(HooksSerializer, %{}) == %{before: true, after: true}
   end
 end
