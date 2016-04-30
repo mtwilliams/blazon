@@ -9,14 +9,14 @@ defmodule Blazon.Serializable do
     quote do
       import Blazon.Serializable
 
-      # This is helps us differentiate between representers and structs. We
-      # could use `Module.defines?(__MODULE__, :__struct__)`, but this seems
-      # cleaner because it's not tied to Elixir's internals. It also allows us
-      # to detect modules that are neither.
+      # This helps us differentiate between representers and structs. We could
+      # use `Module.defines?(__MODULE__, :__struct__)`, but this seems cleaner
+      # because it's not tied to Elixir's internals. It also allows us to
+      # detect modules that are neither (and inform the user of their incompetence).
       def __blazon__, do: true
 
       # Our field/3, link/3, and embed/3 macros simply build up an agnostic
-      # definition of how to serialize an object thats used by Blazon.Serializer
+      # definition of how to serialize an object that's used by Blazon.Serializer
       # implementations.
       @before_compile Blazon.Serializable
       Module.register_attribute __MODULE__, :__serialize__, accumulate: true, persist: false
@@ -24,16 +24,25 @@ defmodule Blazon.Serializable do
       # Allow users to massage their model prior to serialization.
       defp __before_serialize__(model), do: model
       defoverridable [__before_serialize__: 1]
+
+      # Also allow users to massage their model after serialization. I can't
+      # think of case where this makes sense (in production). However, it can
+      # be useful for profiling.
+      defp __after_serialize__(model), do: model
+      defoverridable [__after_serialize__: 1]
     end
   end
 
   @doc false
   defmacro __before_compile__(_opts) do
     quote do
-      def serialize(serializer, model, opts \\ []) do
-        model = __before_serialize__(model)
+      # We ensure __field__ is defined at least once so `extract` (in
+      # `serialize/3` below) compiles even if a user doesn't declare a single
+      # field, link, or embed to serialize.
+      defp __field__(nil, _), do: nil
 
-        filtered = case {Keyword.get(opts, :only), Keyword.get(opts, :except)} do
+      def serialize(serializer, model, opts \\ []) do
+        fields = case {Keyword.get(opts, :only), Keyword.get(opts, :except)} do
           {nil, nil} ->
             @__serialize__
           {nil, leave} ->
@@ -42,9 +51,15 @@ defmodule Blazon.Serializable do
             Enum.filter(@__serialize__, fn field -> field in keep end)
         end
 
-        filtered
-        |> Enum.map(fn serialize -> {serialize, __field__(serialize, model)} end)
+        extract = fn model ->
+          Enum.map(fields, fn field -> {field, __field__(field, model)} end)
+        end
+
+        model
+        |> __before_serialize__
+        |> extract.()
         |> serializer.serialize(opts)
+        |> __after_serialize__
       end
     end
   end
@@ -57,9 +72,13 @@ defmodule Blazon.Serializable do
     end
   end
 
-  defmacro before(do: hook) do
+  @hooks ~w(before after)a
+
+  defmacro hook(hook, do: body) when hook in @hooks do
     quote do
-      defp __before_serialize__(var!(model)), [do: unquote(hook)]
+      defp unquote(:"__#{hook}_serialize__")(var!(model)) do
+        unquote(body)
+      end
     end
   end
 
@@ -68,14 +87,14 @@ defmodule Blazon.Serializable do
       {:fn, _, _} = generator ->
         quote do
           @__serialize__ unquote(name)
-          def __field__(unquote(name), model) do
+          defp __field__(unquote(name), model) do
             unquote(generator).(model)
           end
         end
       _ ->
         quote do
           @__serialize__ unquote(name)
-          def __field__(unquote(name), model) do
+          defp __field__(unquote(name), model) do
             Map.get(model, unquote(name))
           end
         end
@@ -94,7 +113,7 @@ defmodule Blazon.Serializable do
         expand = expander(representer_or_type, opts)
         quote do
           @__serialize__ unquote(name)
-          def __field__(unquote(name), model) do
+          defp __field__(unquote(name), model) do
             Enum.map(Map.get(model, unquote(name)), unquote(expand))
           end
         end
@@ -104,7 +123,7 @@ defmodule Blazon.Serializable do
         expand = expander(representer_or_type, opts)
         quote do
           @__serialize__ unquote(name)
-          def __field__(unquote(name), model) do
+          defp __field__(unquote(name), model) do
             unquote(expand).(Map.get(model, unquote(name)))
           end
         end

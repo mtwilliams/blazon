@@ -74,4 +74,23 @@ defmodule Blazon.Tests do
     encoded = BasicsSerializer.serialize(Blazon.Serializers.JSON, @basics)
     assert encoded == Poison.encode!(@basics)
   end
+
+  defmodule HooksSerializer do
+    use Blazon.Serializable
+
+    hook :before do
+      %{before: true}
+    end
+
+    hook :after do
+      Map.merge(model, %{after: true})
+    end
+
+    field :before
+    field :after
+  end
+
+  test "hooks" do
+    assert HooksSerializer.serialize(Blazon.Serializers.Map, %{}) == %{before: true, after: true}
+  end
 end
