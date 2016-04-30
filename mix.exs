@@ -32,7 +32,7 @@ defmodule Blazon.Mixfile do
   defp documentation_url, do: "https://github.com/mtwilliams/blazon"
 
   defp version do
-    "0.1.6"
+    "0.1.7"
   end
 
   defp elixirc_paths(:test), do: ~w(test/support) ++ elixirc_paths
