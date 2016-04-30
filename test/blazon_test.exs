@@ -88,4 +88,15 @@ defmodule Blazon.Tests do
   test "hooks" do
     assert Blazon.to_map(HooksSerializer, %{}) == %{before: true, after: true}
   end
+
+  defmodule GeneratorsSerializer do
+    use Blazon.Serializable
+
+    field :stabby, via: fn _ -> true end
+    field :short, via: &(is_map(&1))
+  end
+
+  test "generators" do
+    assert Blazon.to_map(GeneratorsSerializer, %{}) == %{stabby: true, short: true}
+  end
 end
