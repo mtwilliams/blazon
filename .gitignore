@@ -19,6 +19,7 @@ _rel/
 cover/
 
 # Ignore documentation.
+doc/
 docs/
 
 # Ignore crash dumps.
