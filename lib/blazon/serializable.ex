@@ -117,7 +117,10 @@ defmodule Blazon.Serializable do
         quote do
           @__serialize__ unquote(name)
           defp __field__(unquote(name), model) do
-            Enum.map(Map.get(model, unquote(name)), unquote(embed))
+            case Map.get(model, unquote(name)) do
+              nil -> nil
+              embed when is_list(embed) -> Enum.map(embed, unquote(embed))
+            end
           end
         end
 
