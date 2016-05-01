@@ -67,38 +67,50 @@ defmodule Blazon.Serializable do
 
   defmacro hook(hook, do: body) when hook in @hooks do
     quote do
-      defp unquote(:"__#{hook}_serialize__")(var!(model)) do
-        unquote(body)
+      defp unquote(:"__#{hook}_serialize__")(var!(model)), do: unquote(body)
+    end
+  end
+
+  @doc ~S"""
+  """
+  defmacro field(name, opts \\ []) do
+    quote do
+      @__serialize__ unquote(name)
+
+      defp __field__(unquote(name), var!(model)) do
+        unquote(
+          case Keyword.get(opts, :via) do
+            nil ->
+              __field_via_fetcher__(name)
+            {:&, _, _} = via ->
+              __field_via_generator__(name, via)
+            {:fn, _, _} = via ->
+              __field_via_generator__(name, via)
+          end
+        )
       end
     end
   end
 
-  defmacro field(name, opts \\ []) do
-    case Keyword.get(opts, :via) do
-      {:&, _, _} = generator ->
-        serialize_via_generator(name, generator)
-      {:fn, _, _} = generator ->
-        serialize_via_generator(name, generator)
-      _ ->
-        quote do
-          @__serialize__ unquote(name)
-          defp __field__(unquote(name), model), do: Map.get(model, unquote(name))
-        end
-    end
+  @doc false
+  defp __field_via_fetcher__(name) do
+    quote do Map.get(var!(model), unquote(name)) end
   end
 
-  defp serialize_via_generator(name, generator) do
-    quote do
-      @__serialize__ unquote(name)
-      defp __field__(unquote(name), model), do: unquote(generator).(model)
-    end
+  @doc false
+  defp __field_via_generator__(name, generator) do
+    quote do unquote(generator).(var!(model)) end
   end
 
+  @doc ~S"""
+  """
   defmacro link(name, opts \\ []) do
     # TODO(mtwilliams): Implement linking.
     raise "Not implemented yet!"
   end
 
+  @doc ~S"""
+  """
   defmacro embed(name, representer_or_type, opts \\ []) do
     case representer_or_type do
       [aliased] ->
@@ -126,11 +138,12 @@ defmodule Blazon.Serializable do
     end
   end
 
+  @doc false
   defp do_embed(representer_or_type, opts) do
     quote do
       if Blazon.serializable?(unquote(representer_or_type)) do
         fn model ->
-          unquote(representer_or_type).serialize(Blazon.Serializers.Map, model, unquote(opts))
+          unquote(representer_or_type).__serialize__(Blazon.Serializers.Map, model, unquote(opts))
         end
       else
         fn model ->
