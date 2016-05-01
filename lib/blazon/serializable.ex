@@ -3,6 +3,7 @@ defmodule Blazon.Serializable do
   """
 
   @options ~w(only except via)a
+  @hooks ~w(before after)a
 
   @doc false
   defmacro __using__(_opts) do
@@ -66,7 +67,6 @@ defmodule Blazon.Serializable do
     end
   end
 
-  @hooks ~w(before after)a
 
   defmacro hook(hook, do: body) when hook in @hooks do
     quote do
