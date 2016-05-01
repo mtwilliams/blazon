@@ -10,7 +10,7 @@ defmodule Blazon.Serializable do
     quote do
       import Blazon.Serializable
 
-      # This helps us differentiate between representers and structs. We could
+      # This helps us differentiate between serializables and structs. We could
       # use `Module.defines?(__MODULE__, :__struct__)`, but this seems cleaner
       # because it's not tied to Elixir's internals. It also allows us to
       # detect modules that are neither (and inform the user of their incompetence).
@@ -111,54 +111,56 @@ defmodule Blazon.Serializable do
 
   @doc ~S"""
   """
-  defmacro embed(name, representer_or_type, opts \\ []) do
-    case representer_or_type do
-      [aliased] ->
-        representer_or_type = Macro.expand(aliased, __CALLER__)
-        embed = do_embed(representer_or_type, opts)
-        quote do
-          @__serialize__ unquote(name)
-          defp __field__(unquote(name), model) do
-            case Map.get(model, unquote(name)) do
-              nil -> nil
-              embed when is_list(embed) -> Enum.map(embed, unquote(embed))
-            end
-          end
-        end
-
-      aliased ->
-        representer_or_type = Macro.expand(aliased, __CALLER__)
-        embed = do_embed(representer_or_type, opts)
-        quote do
-          @__serialize__ unquote(name)
-          defp __field__(unquote(name), model) do
-            unquote(embed).(Map.get(model, unquote(name)))
-          end
-        end
+  defmacro embed(name, serializable, opts \\ []) do
+    {unaliased, plural} = case serializable do
+      [aliased] -> {Macro.expand(aliased, __CALLER__), true}
+      aliased   -> {Macro.expand(aliased, __CALLER__), false}
     end
-  end
 
-  @doc false
-  defp do_embed(representer_or_type, opts) do
-    quote do
-      if Blazon.serializable?(unquote(representer_or_type)) do
-        fn model ->
-          unquote(representer_or_type).__serialize__(Blazon.Serializers.Map, model, unquote(opts))
+    subfield = quote do
+      if Blazon.serializable?(unquote(unaliased)) do
+        defp __field__(unquote(:"#{name}[]"), model) do
+          unquote(unaliased).__serialize__(Blazon.Serializers.Map, model, unquote(opts))
         end
       else
-        fn model ->
-          # SMELL(mtwilliams): This is pretty much the same as the code in
-          # our __before_compile__ hook.
+        defp __field__(unquote(:"#{name}[]"), model) do
           case unquote({Keyword.get(opts, :only), Keyword.get(opts, :except)}) do
-            {nil, nil} ->
-              model
-            {nil, leave} ->
-              Enum.reject(model, fn {field, _} -> field in leave end)
-            {keep, nil} ->
-              Enum.filter(model, fn {field, _} -> field in keep end)
+            {nil, nil}   -> model
+            {nil, leave} -> Enum.reject(model, fn {field, _} -> field in leave end)
+            {keep, nil}  -> Enum.filter(model, fn {field, _} -> field in keep end)
           end
         end
       end
+    end
+
+    # SMELL(mtwilliams): This is a lot of code duplication.
+    field = if plural do
+      quote do
+        defp __field__(unquote(name), model) do
+          case Map.get(model, unquote(name)) do
+            nil -> nil
+            submodels when is_list(submodels) ->
+              Enum.map(submodels, &(__field__(unquote(:"#{name}[]"), &1)))
+          end
+        end
+      end
+    else
+      quote do
+        defp __field__(unquote(name), model) do
+          case Map.get(model, unquote(name)) do
+            nil -> nil
+            submodel ->
+              __field__(unquote(:"#{name}[]"), submodel)
+          end
+        end
+      end
+    end
+
+    quote do
+      @__serialize__ unquote(name)
+
+      unquote(field)
+      unquote(subfield)
     end
   end
 end
