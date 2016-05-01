@@ -19,7 +19,7 @@ defmodule Blazon.Serializable do
       # definition of how to serialize an object that's used by Blazon.Serializer
       # implementations.
       @before_compile Blazon.Serializable
-      Module.register_attribute __MODULE__, :__serialize__, accumulate: true, persist: false
+      Module.register_attribute __MODULE__, :__serialize__, accumulate: true
 
       # Allow users to massage their model prior to serialization.
       defp __before_serialize__(model), do: model
