@@ -41,7 +41,8 @@ defmodule Blazon.Serializable do
       # field, link, or embed to serialize.
       defp __field__(:__blazon__, _), do: true
 
-      def serialize(serializer, model, opts \\ []) do
+      # This shouldn't be called directly... so we obsfucate the name.
+      def __serialize__(serializer, model, opts \\ []) do
         fields = to_be_serialized(opts)
         extract = fn model -> Enum.map(fields, &({&1, __field__(&1, model)})) end
 
