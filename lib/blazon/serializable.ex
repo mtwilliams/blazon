@@ -65,14 +65,6 @@ defmodule Blazon.Serializable do
     end
   end
 
-  def is?(module) do
-    if Code.ensure_loaded?(module) do
-      function_exported?(module, :__blazon__, 0)
-    else
-      false
-    end
-  end
-
   @hooks ~w(before after)a
 
   defmacro hook(hook, do: body) when hook in @hooks do
@@ -138,7 +130,7 @@ defmodule Blazon.Serializable do
 
   defp do_embed(representer_or_type, opts) do
     quote do
-      if Blazon.Serializable.is?(unquote(representer_or_type)) do
+      if Blazon.serializable?(unquote(representer_or_type)) do
         fn model ->
           unquote(representer_or_type).serialize(Blazon.Serializers.Map, model, unquote(opts))
         end
