@@ -112,18 +112,16 @@ defmodule Blazon.Serializable do
   @doc ~S"""
   """
   defmacro embed(name, serializable, opts \\ []) do
-    {unaliased, plural} = case serializable do
-      [aliased] -> {Macro.expand(aliased, __CALLER__), true}
-      aliased   -> {Macro.expand(aliased, __CALLER__), false}
+    {aliased, unaliased, plural} = case serializable do
+      [aliased] -> {aliased, Macro.expand(aliased, __CALLER__), true}
+      aliased   -> {aliased, Macro.expand(aliased, __CALLER__), false}
     end
 
     subfield = quote do
-      if Blazon.serializable?(unquote(unaliased)) do
-        defp __field__(unquote(:"#{name}[]"), model) do
+      defp __field__(unquote(:"#{name}[]"), model) do
+        if Blazon.serializable?(unquote(aliased)) do
           unquote(unaliased).__serialize__(Blazon.Serializers.Map, model, unquote(opts))
-        end
-      else
-        defp __field__(unquote(:"#{name}[]"), model) do
+        else
           case unquote({Keyword.get(opts, :only), Keyword.get(opts, :except)}) do
             {nil, nil}   -> model
             {nil, leave} -> Enum.reject(model, fn {field, _} -> field in leave end)
