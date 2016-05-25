@@ -44,7 +44,7 @@ defmodule Blazon.Serializable do
 
       # This shouldn't be called directly... so we obsfucate the name.
       def __serialize__(serializer, model, opts \\ []) do
-        fields = Blazon.Serializable.__fields_to_extract__(@__serialize__, opts)
+        fields = Blazon.Options.fields_to_extract(@__serialize__, opts)
         extract = fn model -> Enum.map(fields, &({&1, __field__(&1, model)})) end
 
         model
@@ -53,15 +53,6 @@ defmodule Blazon.Serializable do
         |> serializer.serialize(opts)
         |> __after_serialize__
       end
-    end
-  end
-
-  @doc false
-  def __fields_to_extract__(all, opts) do
-    case {Keyword.get(opts, :only), Keyword.get(opts, :except)} do
-      {nil, nil}   -> all
-      {nil, leave} -> Enum.reject(all, &(&1 in leave))
-      {keep, nil}  -> Enum.filter(all, &(&1 in keep))
     end
   end
 

@@ -51,8 +51,7 @@ defmodule Blazon.Tests do
   end
 
   test "only and except are mutually exclusive" do
-    # TODO(mtwilliams): Provide a custom exception type.
-    assert_raise CaseClauseError, fn ->
+    assert_raise Blazon.OptionsError, fn ->
       Blazon.to_map(DouglasAdamsSerializer, %{}, only: ~w(meaning_of_life)a, except: ~w(meaning_of_life)a)
     end
   end
