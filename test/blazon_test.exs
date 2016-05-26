@@ -30,7 +30,7 @@ defmodule Blazon.Tests do
   end
 
   test "serialization of basic types" do
-    assert Blazon.to_map(BasicsSerializer, @basics) == @basics
+    assert Blazon.map(BasicsSerializer, @basics) == @basics
   end
 
   defmodule DouglasAdamsSerializer do
@@ -41,18 +41,18 @@ defmodule Blazon.Tests do
   @the_answer_to_the_ultimate_question %{meaning_of_life: 42}
 
   test "only" do
-   assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, only: []) == %{}
-   assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, only: ~w(meaning_of_life)a) == @the_answer_to_the_ultimate_question
+   assert Blazon.map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, only: []) == %{}
+   assert Blazon.map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, only: ~w(meaning_of_life)a) == @the_answer_to_the_ultimate_question
   end
 
   test "except" do
-    assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, except: ~w(meaning_of_life)a) == %{}
-    assert Blazon.to_map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, except: []) == @the_answer_to_the_ultimate_question
+    assert Blazon.map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, except: ~w(meaning_of_life)a) == %{}
+    assert Blazon.map(DouglasAdamsSerializer, @the_answer_to_the_ultimate_question, except: []) == @the_answer_to_the_ultimate_question
   end
 
   test "only and except are mutually exclusive" do
     assert_raise Blazon.OptionsError, fn ->
-      Blazon.to_map(DouglasAdamsSerializer, %{}, only: ~w(meaning_of_life)a, except: ~w(meaning_of_life)a)
+      Blazon.map(DouglasAdamsSerializer, %{}, only: ~w(meaning_of_life)a, except: ~w(meaning_of_life)a)
     end
   end
 
@@ -63,11 +63,11 @@ defmodule Blazon.Tests do
   end
 
   test "embedding" do
-    assert Blazon.to_map(EmbeddedSerializer, %{basics: @basics, collection: [@basics]}) == %{basics: @basics, collection: [@basics]}
+    assert Blazon.map(EmbeddedSerializer, %{basics: @basics, collection: [@basics]}) == %{basics: @basics, collection: [@basics]}
   end
 
   test "json" do
-    assert Blazon.to_json(BasicsSerializer, @basics) == Poison.encode!(@basics)
+    assert Blazon.json(BasicsSerializer, @basics) == Poison.encode!(@basics)
   end
 
   defmodule HooksSerializer do
@@ -86,7 +86,7 @@ defmodule Blazon.Tests do
   end
 
   test "hooks" do
-    assert Blazon.to_map(HooksSerializer, %{}) == %{before: true, after: true}
+    assert Blazon.map(HooksSerializer, %{}) == %{before: true, after: true}
   end
 
   defmodule GeneratorsSerializer do
@@ -97,6 +97,6 @@ defmodule Blazon.Tests do
   end
 
   test "generators" do
-    assert Blazon.to_map(GeneratorsSerializer, %{}) == %{stabby: true, short: true}
+    assert Blazon.map(GeneratorsSerializer, %{}) == %{stabby: true, short: true}
   end
 end

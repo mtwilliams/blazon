@@ -14,7 +14,7 @@ defmodule Blazon do
                 {:json, Blazon.Serializers.JSON}]
 
   for {name, serializer} <- @serializers do
-    def unquote(:"to_#{name}")(serializable, model, opts \\ []) do
+    def unquote(name)(serializable, model, opts \\ []) do
       apply(serializable, :__serialize__, [unquote(serializer), model, opts])
     end
   end
