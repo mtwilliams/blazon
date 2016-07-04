@@ -41,7 +41,7 @@ defmodule Blazon.Mixfile do
 
   defp deps do [
     # Testing
-    {:poison, ">= 0.0.0", only: [:test, :docs]},
+    {:poison, ">= 0.0.0", only: [:test, :docs], optional: true},
     {:excoveralls, "~> 0.4", only: :test},
 
     # Documentation
