@@ -8,7 +8,7 @@ defmodule Blazon.Mixfile do
      description: "Declarative abstract serializers.",
      homepage_url: homepage_url,
      source_url: github_url,
-     elixir: "~> 1.2",
+     elixir: "~> 1.0",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
