@@ -1,6 +1,12 @@
 defmodule Blazon.Tests do
   use ExUnit.Case, async: true
 
+  test "options have to be atoms" do
+    assert_raise Blazon.OptionsError, fn ->
+      Blazon.Options.fields_to_extract([], only: ~w(not_an_atom))
+    end
+  end
+
   @basics %{
     nil: nil,
     atom: :foo,
