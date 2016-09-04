@@ -5,7 +5,9 @@
 [![Documentation](http://inch-ci.org/github/mtwilliams/blazon.svg)](http://inch-ci.org/github/mtwilliams/blazon)
 [![Package](https://img.shields.io/hexpm/dt/blazon.svg)](https://hex.pm/packages/blazon)
 
-Blazon allows you to quickly build abstract serializers in a declarative fashion. Expose complex object hierarchies in JSON, XML, UBF, or whatever!
+Blazon allows you to quickly build abstract serializers in a declarative fashion. It also has a large focus on composition, allowing you to quickly build and reuse common functionality for things like pagination, automatic preloading, and so on in a few lines of code. Furthermore, Blazon is format agnostic so you can expose your complex object heirarchies in JSON, XML, UBF, CSV, or whatever you want without changing your presentation logic.
+
+Although Blazon has great test coverage, its design is nowhere near final and is rapidly changing, making it **unsuitable for production**.
 
 ## Example
 
@@ -21,20 +23,6 @@ end
 Blazon.json(Person.Serializer, %{name: "John Cleese", title: "Minister of Silly Walks", age: 42}, except: ~w(age)a)
 ```
 
-## Usage
-
-### First Steps
-
-...
-
-### Embedding
-
-...
-
-### Is Blazon production ready?
-
-No. But will be very soon.
-
 ## Installation
 
   1. Add `blazon` to your list of dependencies in `mix.exs`:
@@ -48,3 +36,25 @@ No. But will be very soon.
   2. Drink your :tea:
 
   3. That's it!
+
+## Usage
+
+### First Steps
+
+...
+
+### Options
+
+...
+
+### Embedding
+
+...
+
+### Linking
+
+...
+
+### Composition
+
+...
