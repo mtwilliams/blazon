@@ -22,13 +22,15 @@ defmodule Blazon.Serializable do
       Module.register_attribute __MODULE__, :__serialize__, accumulate: true
 
       # Allow users to massage their model prior to serialization.
-      defp __before_serialize__(model), do: model
+      @doc false
+      def __before_serialize__(model), do: model
       defoverridable [__before_serialize__: 1]
 
       # Also allow users to massage their model after serialization. I can't
       # think of case where this makes sense (in production). However, it can
       # be useful for profiling.
-      defp __after_serialize__(model), do: model
+      @doc false
+      def __after_serialize__(model), do: model
       defoverridable [__after_serialize__: 1]
     end
   end
