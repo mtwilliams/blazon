@@ -2,7 +2,6 @@ defmodule Blazon.Serializable do
   @moduledoc ~S"""
   """
 
-  @options ~w(only except via)a
   @hooks ~w(before after)a
 
   @doc false
@@ -89,13 +88,13 @@ defmodule Blazon.Serializable do
   end
 
   @doc false
-  defp __field_via_generator__(name, generator) do
+  defp __field_via_generator__(_name, generator) do
     quote do unquote(generator).(var!(model)) end
   end
 
   @doc ~S"""
   """
-  defmacro link(name, opts \\ []) do
+  defmacro link(_name, _opts \\ []) do
     # TODO(mtwilliams): Implement linking.
     raise "Not implemented yet!"
   end
