@@ -4,7 +4,7 @@ defmodule Blazon.Serializers.Map do
 
   @behaviour Blazon.Serializer
 
-  def serialize(agnostic, opts) do
+  def serialize(agnostic, _opts) do
     Enum.into(agnostic, %{})
   end
 end
