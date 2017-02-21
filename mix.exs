@@ -32,7 +32,7 @@ defmodule Blazon.Mixfile do
   defp documentation_url, do: "https://github.com/mtwilliams/blazon"
 
   defp version do
-    "0.2.2"
+    "0.2.3"
   end
 
   defp elixirc_paths(:test), do: ~w(test/support) ++ elixirc_paths()
@@ -45,8 +45,8 @@ defmodule Blazon.Mixfile do
     {:excoveralls, "~> 0.4", only: :test},
 
     # Documentation
-    {:ex_doc, "~> 0.10", only: :docs},
-    {:earmark, "~> 0.1", only: :docs},
+    {:ex_doc, "~> 0.10", only: [:dev, :docs]},
+    {:earmark, "~> 0.1", only: [:dev, :docs]},
     {:inch_ex, ">= 0.0.0", only: :docs}
   ] end
 
